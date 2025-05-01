@@ -1,5 +1,4 @@
 import 'package:offline_ticket_booking/core/use_case/use_case.dart';
-import 'package:offline_ticket_booking/domain/booking/entities/booking.dart';
 import 'package:offline_ticket_booking/domain/booking/repositories/booking_repository.dart';
 import 'package:offline_ticket_booking/domain/wallet/repositories/wallet_repository.dart';
 

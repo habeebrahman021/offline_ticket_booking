@@ -1,7 +1,6 @@
 import 'package:offline_ticket_booking/core/database/database_helper.dart';
 import 'package:offline_ticket_booking/core/utils/constants.dart';
 import 'package:offline_ticket_booking/data/booking/dto/booking_dto.dart';
-import 'package:sqflite/sqflite.dart';
 
 abstract class BookingsDataSource {
   Future<List<BookingDto>> getBookings();

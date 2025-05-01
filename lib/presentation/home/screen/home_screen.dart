@@ -7,6 +7,7 @@ import 'package:offline_ticket_booking/core/di/injector.dart';
 import 'package:offline_ticket_booking/core/router/app_router.dart';
 import 'package:offline_ticket_booking/core/utils/enums/ticket_status.dart';
 import 'package:offline_ticket_booking/core/utils/extensions/datetime_extension.dart';
+import 'package:offline_ticket_booking/domain/booking/entities/booking.dart';
 import 'package:offline_ticket_booking/presentation/home/bloc/home_bloc.dart';
 import 'package:offline_ticket_booking/presentation/home/widgets/ticket_status_filter_bottom_sheet.dart';
 
@@ -50,192 +51,262 @@ class _HomeBody extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Gap(16),
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    spreadRadius: 2,
-                    blurRadius: 5,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              padding: EdgeInsets.all(16),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Balance', style: TextStyle(fontSize: 16)),
-                    Gap(8),
-                    Text(
-                      '₹${state.balance.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Gap(8),
-                    Text(
-                      'As On '
-                      '${DateTime.now().toStringFormatted('MMM dd, yyyy')}',
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Gap(16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Text(
-                    'Bookings',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                  Spacer(),
-                  IconButton(
-                    onPressed: () {
-                      showTicketStatusFilterBottomSheet(
-                        context: context,
-                        selected: state.filter,
-                        onSelected: (newFilter) {
-                          context.read<HomeBloc>().add(
-                            FilterChanged(newFilter),
-                          );
-                        },
-                      );
-                    },
-                    icon: Icon(Icons.filter_alt_outlined),
-                  ),
-                ],
-              ),
-            ),
+            const Gap(16),
+            BalanceCard(balance: state.balance),
+            const Gap(16),
+            const BookingsHeader(),
             Expanded(
               child:
                   state.filteredBookings.isEmpty
-                      ? Center(
-                        child: Text('No Bookings. Press + to book new ticket.'),
-                      )
-                      : ListView.separated(
-                        padding: EdgeInsets.fromLTRB(16, 16, 16, 120),
-                        itemCount: state.filteredBookings.length,
-                        itemBuilder: (context, index) {
-                          final booking = state.filteredBookings[index];
-                          return Slidable(
-                            enabled: booking.status?.isUpcoming ?? false,
-                            endActionPane: ActionPane(
-                              motion: const ScrollMotion(),
-                              children: [
-                                SlidableAction(
-                                  autoClose: true,
-                                  backgroundColor: Colors.red,
-                                  foregroundColor: Colors.white,
-                                  icon: Icons.cancel,
-                                  label: 'Cancel',
-                                  borderRadius: BorderRadius.circular(8),
-                                  onPressed: (BuildContext context) {
-                                    context.read<HomeBloc>().add(
-                                      CancelPressed(index),
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.1),
-                                    spreadRadius: 2,
-                                    blurRadius: 5,
-                                    offset: Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              padding: EdgeInsets.all(16),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        booking.passengerName,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                      Gap(8),
-                                      Text.rich(
-                                        TextSpan(
-                                          children: [
-                                            TextSpan(text: 'Class: '),
-                                            TextSpan(
-                                              text: booking.className,
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Spacer(),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        "₹${booking.amount.toStringAsFixed(2)}",
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                      Gap(8),
-                                      if (booking.status != null)
-                                        Container(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 4,
-                                            vertical: 2,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: booking.status?.color,
-                                            borderRadius: BorderRadius.circular(
-                                              4,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            booking.status!.name,
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                        separatorBuilder: (context, index) => Gap(16),
-                      ),
+                      ? const NoBookingsPlaceholder()
+                      : BookingsList(bookings: state.filteredBookings),
             ),
           ],
         );
       },
+    );
+  }
+}
+
+class BalanceCard extends StatelessWidget {
+  final double balance;
+
+  const BalanceCard({super.key, required this.balance});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: CardContainer(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('Balance', style: TextStyle(fontSize: 16)),
+            const Gap(8),
+            Text(
+              '₹${balance.toStringAsFixed(2)}',
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+            ),
+            const Gap(8),
+            Text('As On ${DateTime.now().toStringFormatted('MMM dd, yyyy')}'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class BookingsHeader extends StatelessWidget {
+  const BookingsHeader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          const Text(
+            'Bookings',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+          const Spacer(),
+          IconButton(
+            onPressed: () => _showFilterBottomSheet(context),
+            icon: const Icon(Icons.filter_alt_outlined),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFilterBottomSheet(BuildContext context) {
+    final currentFilter = context.read<HomeBloc>().state.filter;
+    showTicketStatusFilterBottomSheet(
+      context: context,
+      selected: currentFilter,
+      onSelected: (newFilter) {
+        context.read<HomeBloc>().add(FilterChanged(newFilter));
+      },
+    );
+  }
+}
+
+class BookingsList extends StatelessWidget {
+  final List<Booking> bookings;
+
+  const BookingsList({super.key, required this.bookings});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+      itemCount: bookings.length,
+      itemBuilder:
+          (context, index) =>
+              BookingListItem(booking: bookings[index], index: index),
+      separatorBuilder: (context, index) => const Gap(16),
+    );
+  }
+}
+
+class BookingListItem extends StatelessWidget {
+  final Booking booking;
+  final int index;
+
+  const BookingListItem({
+    super.key,
+    required this.booking,
+    required this.index,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Slidable(
+      enabled: booking.status?.isUpcoming ?? false,
+      endActionPane: ActionPane(
+        motion: const ScrollMotion(),
+        children: [
+          SlidableAction(
+            autoClose: true,
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+            icon: Icons.cancel,
+            label: 'Cancel',
+            borderRadius: BorderRadius.circular(8),
+            onPressed:
+                (_) => context.read<HomeBloc>().add(CancelPressed(index)),
+          ),
+        ],
+      ),
+      child: CardContainer(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            PassengerInfo(
+              name: booking.passengerName,
+              className: booking.className,
+            ),
+            const Spacer(),
+            BookingDetails(amount: booking.amount, status: booking.status),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class PassengerInfo extends StatelessWidget {
+  final String name;
+  final String className;
+
+  const PassengerInfo({super.key, required this.name, required this.className});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          name,
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+        ),
+        const Gap(8),
+        Text.rich(
+          TextSpan(
+            children: [
+              const TextSpan(text: 'Class: '),
+              TextSpan(
+                text: className,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class BookingDetails extends StatelessWidget {
+  final double amount;
+  final TicketStatus? status;
+
+  const BookingDetails({super.key, required this.amount, this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          "₹${amount.toStringAsFixed(2)}",
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+        ),
+        const Gap(8),
+        if (status != null) StatusIndicator(status: status!),
+      ],
+    );
+  }
+}
+
+class StatusIndicator extends StatelessWidget {
+  final TicketStatus status;
+
+  const StatusIndicator({super.key, required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      decoration: BoxDecoration(
+        color: status.color,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        status.name,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class CardContainer extends StatelessWidget {
+  final Widget child;
+
+  const CardContainer({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            spreadRadius: 2,
+            blurRadius: 5,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(padding: const EdgeInsets.all(16), child: child),
+    );
+  }
+}
+
+class NoBookingsPlaceholder extends StatelessWidget {
+  const NoBookingsPlaceholder({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Text('No Bookings. Press + to book new ticket.'),
     );
   }
 }
