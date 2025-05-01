@@ -9,6 +9,7 @@ import 'package:offline_ticket_booking/domain/booking/entities/booking.dart';
 import 'package:offline_ticket_booking/domain/booking/usecases/calculate_refund_amount_use_case.dart';
 import 'package:offline_ticket_booking/domain/booking/usecases/cancel_booking_use_case.dart';
 import 'package:offline_ticket_booking/domain/booking/usecases/get_bookings_use_case.dart';
+import 'package:offline_ticket_booking/domain/notification/notification_use_case.dart';
 import 'package:offline_ticket_booking/domain/wallet/usecases/get_wallet_balance_use_case.dart';
 
 part 'home_event.dart';
@@ -21,6 +22,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     required this.cancelBookingUseCase,
     required this.getWalletBalanceUseCase,
     required this.calculateRefundAmountUseCase,
+    required this.showNotificationUseCase,
   }) : super(HomeState()) {
     on<HomeEvent>((event, emit) {});
     on<GetBookings>(_onGetBookings);
@@ -32,6 +34,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final CancelBookingUseCase cancelBookingUseCase;
   final GetWalletBalanceUseCase getWalletBalanceUseCase;
   final CalculateRefundAmountUseCase calculateRefundAmountUseCase;
+  final ShowNotificationUseCase showNotificationUseCase;
 
   Future<void> _onGetBookings(
     GetBookings event,
@@ -74,6 +77,15 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
             );
             add(GetBookings());
             add(GetBalance());
+            await showNotificationUseCase(
+              ShowNotificationUseCaseParams(
+                title: '#$id Ticket Cancelled',
+                body:
+                    'Ticket Cancelled Successfully. '
+                    'A refund of ${value.toStringAsFixed(2)}'
+                    ' has been initiated.',
+              ),
+            );
           case Failure():
             Utils.showToast('Failed to cancel booking');
             break;

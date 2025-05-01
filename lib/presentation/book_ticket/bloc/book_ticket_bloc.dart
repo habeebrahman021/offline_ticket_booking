@@ -9,6 +9,7 @@ import 'package:offline_ticket_booking/domain/booking/entities/ticket_class.dart
 import 'package:offline_ticket_booking/domain/booking/usecases/calculate_amount_use_case.dart';
 import 'package:offline_ticket_booking/domain/booking/usecases/create_booking_use_case.dart';
 import 'package:offline_ticket_booking/domain/booking/usecases/get_ticket_classes_use_case.dart';
+import 'package:offline_ticket_booking/domain/notification/notification_use_case.dart';
 
 part 'book_ticket_event.dart';
 
@@ -19,6 +20,7 @@ class BookTicketBloc extends Bloc<BookTicketEvent, BookTicketState> {
     required this.getTicketClassesUseCase,
     required this.calculateAmountUseCase,
     required this.createBookingUseCase,
+    required this.showNotificationUseCase,
     BookTicketState? initialState,
   }) : super(BookTicketState()) {
     on<BookTicketEvent>((event, emit) {});
@@ -35,6 +37,7 @@ class BookTicketBloc extends Bloc<BookTicketEvent, BookTicketState> {
   final GetTicketClassesUseCase getTicketClassesUseCase;
   final CalculateAmountUseCase calculateAmountUseCase;
   final CreateBookingUseCase createBookingUseCase;
+  final ShowNotificationUseCase showNotificationUseCase;
 
   FutureOr<void> _onPassengerNameChanged(
     PassengerNameChanged event,
@@ -122,6 +125,12 @@ class BookTicketBloc extends Bloc<BookTicketEvent, BookTicketState> {
 
     switch (result) {
       case Success():
+        await showNotificationUseCase(
+          ShowNotificationUseCaseParams(
+            title: 'Ticket Booked',
+            body: 'Ticket booked successfully. Please check your bookings.',
+          ),
+        );
         emit(state.copyWith(saveStatus: Status.success));
       case Failure(:final exception):
         Utils.showToast(exception.toString());

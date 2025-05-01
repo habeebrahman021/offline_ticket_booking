@@ -1,3 +1,4 @@
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get_it/get_it.dart';
 import 'package:offline_ticket_booking/core/database/database_helper.dart';
 import 'package:offline_ticket_booking/data/booking/datasources/local/booking_data_source.dart';
@@ -11,6 +12,7 @@ import 'package:offline_ticket_booking/domain/booking/usecases/cancel_booking_us
 import 'package:offline_ticket_booking/domain/booking/usecases/create_booking_use_case.dart';
 import 'package:offline_ticket_booking/domain/booking/usecases/get_bookings_use_case.dart';
 import 'package:offline_ticket_booking/domain/booking/usecases/get_ticket_classes_use_case.dart';
+import 'package:offline_ticket_booking/domain/notification/notification_use_case.dart';
 import 'package:offline_ticket_booking/domain/wallet/repositories/wallet_repository.dart';
 import 'package:offline_ticket_booking/domain/wallet/usecases/get_wallet_balance_use_case.dart';
 import 'package:offline_ticket_booking/presentation/book_ticket/bloc/book_ticket_bloc.dart';
@@ -27,7 +29,30 @@ Future<void> initializeDependencies() async {
 }
 
 Future<void> _initializeCore() async {
+  ;
+
   injector.registerSingleton<DatabaseHelper>(DatabaseHelper());
+
+  injector.registerSingleton<FlutterLocalNotificationsPlugin>(
+    FlutterLocalNotificationsPlugin(),
+  );
+
+  const AndroidInitializationSettings androidInitSettings =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  final DarwinInitializationSettings iosInitSettings =
+      DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+      );
+
+  final InitializationSettings initSettings = InitializationSettings(
+    android: androidInitSettings,
+    iOS: iosInitSettings,
+  );
+
+  await injector<FlutterLocalNotificationsPlugin>().initialize(initSettings);
 }
 
 Future<void> _initializeDataSources() async {
@@ -75,6 +100,10 @@ Future<void> _initializeUseCases() async {
   injector.registerSingleton<CalculateRefundAmountUseCase>(
     CalculateRefundAmountUseCase(),
   );
+
+  injector.registerSingleton<ShowNotificationUseCase>(
+    ShowNotificationUseCase(flutterLocalNotificationsPlugin: injector()),
+  );
 }
 
 Future<void> _initializeBlocs() async {
@@ -83,6 +112,7 @@ Future<void> _initializeBlocs() async {
       getTicketClassesUseCase: injector(),
       calculateAmountUseCase: injector(),
       createBookingUseCase: injector(),
+      showNotificationUseCase: injector(),
     ),
   );
 
@@ -92,6 +122,7 @@ Future<void> _initializeBlocs() async {
       cancelBookingUseCase: injector(),
       getWalletBalanceUseCase: injector(),
       calculateRefundAmountUseCase: injector(),
+      showNotificationUseCase: injector(),
     ),
   );
 }
