@@ -4,10 +4,12 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:offline_ticket_booking/core/use_case/use_case.dart';
 import 'package:offline_ticket_booking/core/utils/enums/status.dart';
+import 'package:offline_ticket_booking/core/utils/enums/ticket_status_filter.dart';
 import 'package:offline_ticket_booking/core/utils/utils.dart';
 import 'package:offline_ticket_booking/domain/booking/entities/booking.dart';
 import 'package:offline_ticket_booking/domain/booking/usecases/calculate_refund_amount_use_case.dart';
 import 'package:offline_ticket_booking/domain/booking/usecases/cancel_booking_use_case.dart';
+import 'package:offline_ticket_booking/domain/booking/usecases/filter_bookings_use_case.dart';
 import 'package:offline_ticket_booking/domain/booking/usecases/get_bookings_use_case.dart';
 import 'package:offline_ticket_booking/domain/notification/notification_use_case.dart';
 import 'package:offline_ticket_booking/domain/wallet/usecases/get_wallet_balance_use_case.dart';
@@ -23,11 +25,13 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     required this.getWalletBalanceUseCase,
     required this.calculateRefundAmountUseCase,
     required this.showNotificationUseCase,
+    required this.filterBookingsUseCase,
   }) : super(HomeState()) {
     on<HomeEvent>((event, emit) {});
     on<GetBookings>(_onGetBookings);
     on<CancelPressed>(_onCancelPressed);
     on<GetBalance>(_onGetBalance);
+    on<FilterChanged>(_onFilterChanged);
   }
 
   final GetBookingsUseCase getBookingsUseCase;
@@ -35,6 +39,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final GetWalletBalanceUseCase getWalletBalanceUseCase;
   final CalculateRefundAmountUseCase calculateRefundAmountUseCase;
   final ShowNotificationUseCase showNotificationUseCase;
+  final FilterBookingsUseCase filterBookingsUseCase;
 
   Future<void> _onGetBookings(
     GetBookings event,
@@ -46,6 +51,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     switch (result) {
       case Success(:final value):
         emit(state.copyWith(bookings: value, bookingsStatus: Status.success));
+        add(FilterChanged(state.filter));
       case Failure():
         emit(state.copyWith(bookingsStatus: Status.failure));
     }
@@ -105,6 +111,26 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       case Success(:final value):
         emit(state.copyWith(balance: value));
       case Failure():
+        break;
+    }
+  }
+
+  Future<void> _onFilterChanged(
+    FilterChanged event,
+    Emitter<HomeState> emit,
+  ) async {
+    emit(state.copyWith(filter: event.filter));
+    final result = await filterBookingsUseCase(
+      FilterBookingsUseCaseParams(
+        bookings: state.bookings,
+        filter: event.filter,
+      ),
+    );
+
+    switch (result) {
+      case Success(:final value):
+        emit(state.copyWith(filteredBookings: value));
+      case Failure<List<Booking>>():
         break;
     }
   }

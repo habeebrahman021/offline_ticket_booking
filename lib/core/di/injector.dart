@@ -10,6 +10,7 @@ import 'package:offline_ticket_booking/domain/booking/usecases/calculate_amount_
 import 'package:offline_ticket_booking/domain/booking/usecases/calculate_refund_amount_use_case.dart';
 import 'package:offline_ticket_booking/domain/booking/usecases/cancel_booking_use_case.dart';
 import 'package:offline_ticket_booking/domain/booking/usecases/create_booking_use_case.dart';
+import 'package:offline_ticket_booking/domain/booking/usecases/filter_bookings_use_case.dart';
 import 'package:offline_ticket_booking/domain/booking/usecases/get_bookings_use_case.dart';
 import 'package:offline_ticket_booking/domain/booking/usecases/get_ticket_classes_use_case.dart';
 import 'package:offline_ticket_booking/domain/notification/notification_use_case.dart';
@@ -104,6 +105,8 @@ Future<void> _initializeUseCases() async {
   injector.registerSingleton<ShowNotificationUseCase>(
     ShowNotificationUseCase(flutterLocalNotificationsPlugin: injector()),
   );
+
+  injector.registerSingleton<FilterBookingsUseCase>(FilterBookingsUseCase());
 }
 
 Future<void> _initializeBlocs() async {
@@ -123,6 +126,7 @@ Future<void> _initializeBlocs() async {
       getWalletBalanceUseCase: injector(),
       calculateRefundAmountUseCase: injector(),
       showNotificationUseCase: injector(),
+      filterBookingsUseCase: injector(),
     ),
   );
 }

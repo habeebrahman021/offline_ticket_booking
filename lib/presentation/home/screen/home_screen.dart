@@ -7,8 +7,8 @@ import 'package:offline_ticket_booking/core/di/injector.dart';
 import 'package:offline_ticket_booking/core/router/app_router.dart';
 import 'package:offline_ticket_booking/core/utils/enums/ticket_status.dart';
 import 'package:offline_ticket_booking/core/utils/extensions/datetime_extension.dart';
-import 'package:offline_ticket_booking/core/utils/extensions/string_extension.dart';
 import 'package:offline_ticket_booking/presentation/home/bloc/home_bloc.dart';
+import 'package:offline_ticket_booking/presentation/home/widgets/ticket_status_filter_bottom_sheet.dart';
 
 @RoutePage()
 class HomeScreen extends StatelessWidget {
@@ -81,7 +81,8 @@ class _HomeBody extends StatelessWidget {
                     ),
                     Gap(8),
                     Text(
-                      'As On ${DateTime.now().toStringFormatted('MMM dd, yyyy')}',
+                      'As On '
+                      '${DateTime.now().toStringFormatted('MMM dd, yyyy')}',
                     ),
                   ],
                 ),
@@ -90,22 +91,41 @@ class _HomeBody extends StatelessWidget {
             Gap(16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'Bookings',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              child: Row(
+                children: [
+                  Text(
+                    'Bookings',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                  Spacer(),
+                  IconButton(
+                    onPressed: () {
+                      showTicketStatusFilterBottomSheet(
+                        context: context,
+                        selected: state.filter,
+                        onSelected: (newFilter) {
+                          context.read<HomeBloc>().add(
+                            FilterChanged(newFilter),
+                          );
+                        },
+                      );
+                    },
+                    icon: Icon(Icons.filter_alt_outlined),
+                  ),
+                ],
               ),
             ),
             Expanded(
               child:
-                  state.bookings.isEmpty
+                  state.filteredBookings.isEmpty
                       ? Center(
                         child: Text('No Bookings. Press + to book new ticket.'),
                       )
                       : ListView.separated(
                         padding: EdgeInsets.fromLTRB(16, 16, 16, 120),
-                        itemCount: state.bookings.length,
+                        itemCount: state.filteredBookings.length,
                         itemBuilder: (context, index) {
-                          final booking = state.bookings[index];
+                          final booking = state.filteredBookings[index];
                           return Slidable(
                             enabled: booking.status?.isUpcoming ?? false,
                             endActionPane: ActionPane(

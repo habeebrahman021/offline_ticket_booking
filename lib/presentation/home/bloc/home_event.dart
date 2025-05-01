@@ -22,3 +22,12 @@ class GetBalance extends HomeEvent {
   @override
   List<Object> get props => [];
 }
+
+class FilterChanged extends HomeEvent {
+  final TicketStatusFilter filter;
+
+  FilterChanged(this.filter);
+
+  @override
+  List<Object> get props => [filter];
+}
